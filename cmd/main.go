@@ -8,6 +8,7 @@ import (
 
 	"github.com/michaelrodriguezuy/go_proyect/internal/user"
 	"github.com/michaelrodriguezuy/go_proyect/pkg/bootstrap"
+	"github.com/michaelrodriguezuy/go_proyect/pkg/handler"
 )
 
 func main() {
@@ -22,7 +23,7 @@ func main() {
 	service := user.NewService(logger, repo)
 	ctx := context.Background() //opcional, por si tenemos que pasar informacion a las diferentes capas
 
-	server.HandleFunc("/users", user.NewEndpoint(ctx, service))
+	handler.NewUserHTTPServer(ctx, server, user.NewEndpoint(ctx, service))
 
 	fmt.Println("Server is running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", server))

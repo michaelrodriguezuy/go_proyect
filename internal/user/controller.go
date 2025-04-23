@@ -3,13 +3,14 @@ package user
 import (
 	"context"
 	"errors"
-	"fmt"
+	"log"
 )
 
 type (
 	Controller func(ctx context.Context, req any) (any, error)
 
 	Endpoints struct {
+		//estas funciones siguen el patron de funcion declarado en la linea 10
 		Create Controller
 		GetAll Controller
 	}
@@ -21,10 +22,12 @@ type (
 	}
 )
 
+// este metodo me devuelve una estructura de endpoints, linea 12
 func NewEndpoint(ctx context.Context, service Service) Endpoints {
 	return Endpoints{
 		Create: makeCreateEndpoint(service),
 		GetAll: makeGetAllEndpoint(service),
+		//cuando estas funciones se ejecutan, no hace un return de las funciones de la linea 45 y 34
 	}
 }
 
@@ -55,7 +58,7 @@ func makeCreateEndpoint(service Service) Controller {
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println("Usuario creado:", user)
+		log.Println("Usuario creado:", user)
 		return user, nil
 	}
 }
