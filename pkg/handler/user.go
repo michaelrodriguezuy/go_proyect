@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/michaelrodriguezuy/go_proyect/internal/user"
@@ -11,35 +12,70 @@ import (
 )
 
 func NewUserHTTPServer(ctx context.Context, router *http.ServeMux, endpoints user.Endpoints) {
-	router.HandleFunc("/users", UserServer(ctx, endpoints)) //para usar el handle con el router interno de GO, necesitamos el request, que nos lo da la funcion UserServer
+	router.HandleFunc("/users/", UserServer(ctx, endpoints)) //para usar el handle con el router interno de GO, necesitamos el request, que nos lo da la funcion UserServer
 }
 
 func UserServer(ctx context.Context, endpoints user.Endpoints) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
+		url := r.URL.Path
+		log.Println(r.Method, ": ", url)
+
+		path, pathSize := transport.Clean(url)
+		if pathSize < 3 || pathSize > 4 {
+			return //si el path no es correcto, no hace nada
+		}
+
+		//aca obtengo el id del usuario
+		params := make(map[string]string)
+		if pathSize == 4 && path[2] != "" {
+			params["userId"] = path[2]
+		}
+
+		//agrego el id al contexto
+		ctx = context.WithValue(ctx, "params", params)
+
 		tran := transport.NewTransport(w, r, ctx) //con este transport lo que hacemos es generar los middleware
 
 		switch r.Method {
 		case http.MethodGet:
-			tran.Server(
-				transport.Endpoint(endpoints.GetAll),
-				decodeGetAllUser,
-				encodeResponse,
-				encodeError)
+			switch pathSize {
+			case 3: //es un getall
+				tran.Server(
+					transport.Endpoint(endpoints.GetAll),
+					decodeGetAllUser,
+					encodeResponse,
+					encodeError)
+			case 4: //es un get por id
+				log.Println("Get por id")
+				tran.Server(
+					nil,
+					decodeGetUser,
+					encodeResponse,
+					encodeError)
+			}
 			return
 		case http.MethodPost:
-
-			tran.Server(
-				transport.Endpoint(endpoints.Create),
-				decodeCreateUser,
-				encodeResponse,
-				encodeError)
-
+			switch pathSize {
+			case 3: //es un create
+				tran.Server(
+					transport.Endpoint(endpoints.Create),
+					decodeCreateUser,
+					encodeResponse,
+					encodeError)
+			}
 			return
-
 		}
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
+}
+
+func decodeGetUser(ctx context.Context, r *http.Request) (any, error) {
+	params := ctx.Value("params").(map[string]string)
+
+	fmt.Println("params: ", params)
+	fmt.Println("userId: ", params["userId"])
+	return nil, fmt.Errorf("not implemented")
 }
 
 func decodeGetAllUser(ctx context.Context, r *http.Request) (any, error) {
