@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 )
 
@@ -11,8 +12,13 @@ type (
 
 	Endpoints struct {
 		//estas funciones siguen el patron de funcion declarado en la linea 10
-		Create Controller
-		GetAll Controller
+		Create  Controller
+		GetAll  Controller
+		GetByID Controller
+	}
+
+	GetReq struct {
+		ID uint64
 	}
 
 	CreateReq struct {
@@ -25,20 +31,11 @@ type (
 // este metodo me devuelve una estructura de endpoints, linea 12
 func NewEndpoint(ctx context.Context, service Service) Endpoints {
 	return Endpoints{
+		//cuando estas funciones se ejecutan, no hace un return de las funciones de la linea 45 y 34
 		Create: makeCreateEndpoint(service),
 		GetAll: makeGetAllEndpoint(service),
-		//cuando estas funciones se ejecutan, no hace un return de las funciones de la linea 45 y 34
-	}
-}
 
-func makeGetAllEndpoint(service Service) Controller {
-
-	return func(ctx context.Context, req any) (any, error) {
-		users, err := service.GetAll(ctx)
-		if err != nil {
-			return nil, err
-		}
-		return users, nil
+		GetByID: makeGetByIDEndpoint(service),
 	}
 }
 
@@ -60,5 +57,30 @@ func makeCreateEndpoint(service Service) Controller {
 		}
 		log.Println("Usuario creado:", user)
 		return user, nil
+	}
+}
+func makeGetAllEndpoint(service Service) Controller {
+
+	return func(ctx context.Context, req any) (any, error) {
+		users, err := service.GetAll(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return users, nil
+	}
+}
+
+func makeGetByIDEndpoint(service Service) Controller {
+
+	return func(ctx context.Context, request any) (any, error) {
+
+		req := request.(GetReq) //casteo el dato a un tipo User
+		fmt.Println("req: ", req)
+
+		// users, err := service.GetAll(ctx)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		return nil, nil
 	}
 }

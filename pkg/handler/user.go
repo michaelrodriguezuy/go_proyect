@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/michaelrodriguezuy/go_proyect/internal/user"
 	"github.com/michaelrodriguezuy/go_proyect/pkg/transport"
@@ -22,9 +23,6 @@ func UserServer(ctx context.Context, endpoints user.Endpoints) func(w http.Respo
 		log.Println(r.Method, ": ", url)
 
 		path, pathSize := transport.Clean(url)
-		if pathSize < 3 || pathSize > 4 {
-			return //si el path no es correcto, no hace nada
-		}
 
 		//aca obtengo el id del usuario
 		params := make(map[string]string)
@@ -32,53 +30,61 @@ func UserServer(ctx context.Context, endpoints user.Endpoints) func(w http.Respo
 			params["userId"] = path[2]
 		}
 
-		//agrego el id al contexto
-		ctx = context.WithValue(ctx, "params", params)
+		//agrego el id al contexto, y con este transport lo que hacemos es generar los middleware
+		tran := transport.NewTransport(w, r, context.WithValue(ctx, "params", params))
 
-		tran := transport.NewTransport(w, r, ctx) //con este transport lo que hacemos es generar los middleware
+		var end user.Controller
+		var deco func(ctx context.Context, r *http.Request) (any, error)
 
 		switch r.Method {
 		case http.MethodGet:
 			switch pathSize {
 			case 3: //es un getall
-				tran.Server(
-					transport.Endpoint(endpoints.GetAll),
-					decodeGetAllUser,
-					encodeResponse,
-					encodeError)
+				end = endpoints.GetAll
+				deco = decodeGetAllUser
+
 			case 4: //es un get por id
-				log.Println("Get por id")
-				tran.Server(
-					nil,
-					decodeGetUser,
-					encodeResponse,
-					encodeError)
+				end = endpoints.GetByID
+				deco = decodeGetUser
+
 			}
-			return
 		case http.MethodPost:
 			switch pathSize {
 			case 3: //es un create
-				tran.Server(
-					transport.Endpoint(endpoints.Create),
-					decodeCreateUser,
-					encodeResponse,
-					encodeError)
+				end = endpoints.Create
+				deco = decodeCreateUser
+
 			}
-			return
 		}
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
+		if end != nil && deco != nil {
+			tran.Server(
+				transport.Endpoint(end),
+				deco,
+				encodeResponse,
+				encodeError)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+
 	}
 }
 
 func decodeGetUser(ctx context.Context, r *http.Request) (any, error) {
 	params := ctx.Value("params").(map[string]string)
 
+	id, err := strconv.ParseUint(params["userId"], 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing userId: %v", err.Error())
+	}
+
 	fmt.Println("params: ", params)
 	fmt.Println("userId: ", params["userId"])
-	return nil, fmt.Errorf("not implemented")
+	return user.GetReq{ID: id}, nil
 }
 
 func decodeGetAllUser(ctx context.Context, r *http.Request) (any, error) {
+	fmt.Println("entro")
 	return nil, nil
 }
 
