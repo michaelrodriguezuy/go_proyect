@@ -53,7 +53,13 @@ func UserServer(ctx context.Context, endpoints user.Endpoints) func(w http.Respo
 			case 3: //es un create
 				end = endpoints.Create
 				deco = decodeCreateUser
+			}
 
+		case http.MethodPatch:
+			switch pathSize {
+			case 4: //es un update
+				end = endpoints.Update 
+				deco = decodeUpdateUser
 			}
 		}
 
@@ -68,6 +74,26 @@ func UserServer(ctx context.Context, endpoints user.Endpoints) func(w http.Respo
 		}
 
 	}
+}
+
+func decodeUpdateUser(ctx context.Context, r *http.Request) (any, error) {
+
+	var req user.UpdateReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil { //decodifica el body
+		return nil, fmt.Errorf("error decoding request: %v", err.Error())
+	}
+
+	params := ctx.Value("params").(map[string]string)
+
+	id, err := strconv.ParseUint(params["userId"], 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing userId: %v", err.Error())
+	}
+
+	req.ID = id
+
+	return req, nil
+
 }
 
 func decodeGetUser(ctx context.Context, r *http.Request) (any, error) {

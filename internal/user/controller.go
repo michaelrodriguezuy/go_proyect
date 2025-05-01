@@ -15,6 +15,7 @@ type (
 		Create  Controller
 		GetAll  Controller
 		GetByID Controller
+		Update  Controller
 	}
 
 	GetReq struct {
@@ -26,6 +27,14 @@ type (
 		LastName  string `json:"last_name,omitempty"`
 		Age       uint8  `json:"age"`
 	}
+
+	//con el puntero lo que le digo es que si viene vacio es un string vacio, y si no viene el valor del campo es nulo, aca no lo actualiza
+	UpdateReq struct {
+		ID        uint64  `json:"id"`
+		FirstName *string `json:"first_name"`
+		LastName  *string `json:"last_name,omitempty"`
+		Age       *uint8  `json:"age"`
+	}
 )
 
 // este metodo me devuelve una estructura de endpoints, linea 12
@@ -36,6 +45,7 @@ func NewEndpoint(ctx context.Context, service Service) Endpoints {
 		GetAll: makeGetAllEndpoint(service),
 
 		GetByID: makeGetByIDEndpoint(service),
+		Update:  makeUpdateEndpoint(service),
 	}
 }
 
@@ -77,10 +87,26 @@ func makeGetByIDEndpoint(service Service) Controller {
 		req := request.(GetReq) //casteo el dato a un tipo User
 		fmt.Println("req: ", req)
 
-		// users, err := service.GetAll(ctx)
-		// if err != nil {
-		// 	return nil, err
-		// }
+		users, err := service.GetByID(ctx, req.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		return users, nil
+	}
+}
+
+func makeUpdateEndpoint(service Service) Controller {
+	return func(ctx context.Context, request any) (any, error) {
+
+		req := request.(UpdateReq)
+		fmt.Println("req: ", req)
+
+		if err := service.Update(ctx, req.ID, req.FirstName, req.LastName, req.Age); err != nil {
+
+			return nil, err
+		}
+
 		return nil, nil
 	}
 }
