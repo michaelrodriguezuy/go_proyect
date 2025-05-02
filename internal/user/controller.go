@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 )
@@ -54,11 +53,14 @@ func makeCreateEndpoint(service Service) Controller {
 
 		req := request.(CreateReq) //convierte el dato a un tipo User CASTEO
 
-		if req.FirstName == "" || req.LastName == "" {
-			return nil, errors.New("Faltan datos")
+		if req.FirstName == "" {
+			return nil, ErrFirstNameRequired
+		}
+		if req.LastName == "" {
+			return nil, ErrLastNameRequired
 		}
 		if req.Age < 18 {
-			return nil, errors.New("El usuario no es mayor de edad")
+			return nil, ErrAgeMinor
 		}
 
 		user, err := service.Create(ctx, req.FirstName, req.LastName, req.Age)
@@ -100,7 +102,16 @@ func makeUpdateEndpoint(service Service) Controller {
 	return func(ctx context.Context, request any) (any, error) {
 
 		req := request.(UpdateReq)
-		fmt.Println("req: ", req)
+
+		if req.FirstName != nil && *req.FirstName == "" {
+			return nil, ErrFirstNameRequired
+		}
+		if req.LastName != nil && *req.LastName == "" {
+			return nil, ErrLastNameRequired
+		}
+		if req.Age != nil && *req.Age < 18 {
+			return nil, ErrAgeMinor
+		}
 
 		if err := service.Update(ctx, req.ID, req.FirstName, req.LastName, req.Age); err != nil {
 

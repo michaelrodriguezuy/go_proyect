@@ -2,7 +2,7 @@ package user
 
 import (
 	"context"
-	"errors"
+
 	"log"
 
 	"slices"
@@ -69,7 +69,7 @@ func (r *repo) GetByID(ctx context.Context, id uint64) (*domain.User, error) {
 	})
 
 	if index < 0 {
-		return nil, errors.New("User not found")
+		return nil, &ErrUserNotFound{id}
 	}
 
 	return &r.db.Users[index], nil
