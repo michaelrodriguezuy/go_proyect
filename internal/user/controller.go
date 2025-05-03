@@ -2,8 +2,11 @@ package user
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
+
+	"github.com/michaelrodriguezuy/go_proyect2/response"
 )
 
 type (
@@ -54,21 +57,24 @@ func makeCreateEndpoint(service Service) Controller {
 		req := request.(CreateReq) //convierte el dato a un tipo User CASTEO
 
 		if req.FirstName == "" {
-			return nil, ErrFirstNameRequired
+
+			return nil, response.BadRequest(ErrFirstNameRequired.Error())
 		}
 		if req.LastName == "" {
-			return nil, ErrLastNameRequired
+
+			return nil, response.BadRequest(ErrLastNameRequired.Error())
 		}
 		if req.Age < 18 {
-			return nil, ErrAgeMinor
+
+			return nil, response.BadRequest(ErrAgeMinor.Error())
 		}
 
 		user, err := service.Create(ctx, req.FirstName, req.LastName, req.Age)
 		if err != nil {
-			return nil, err
+			return nil, response.InternalServerError(err.Error())
 		}
 		log.Println("Usuario creado:", user)
-		return user, nil
+		return response.Created("success ", user), nil
 	}
 }
 func makeGetAllEndpoint(service Service) Controller {
@@ -76,9 +82,9 @@ func makeGetAllEndpoint(service Service) Controller {
 	return func(ctx context.Context, req any) (any, error) {
 		users, err := service.GetAll(ctx)
 		if err != nil {
-			return nil, err
+			return nil, response.InternalServerError(err.Error())
 		}
-		return users, nil
+		return response.OK("success ", users), nil
 	}
 }
 
@@ -89,12 +95,16 @@ func makeGetByIDEndpoint(service Service) Controller {
 		req := request.(GetReq) //casteo el dato a un tipo User
 		fmt.Println("req: ", req)
 
-		users, err := service.GetByID(ctx, req.ID)
+		user, err := service.GetByID(ctx, req.ID)
 		if err != nil {
-			return nil, err
+			if errors.As(err, &ErrUserNotFound{}) {
+				return nil, response.NotFound(err.Error())
+			}
+
+			return nil, response.InternalServerError(err.Error())
 		}
 
-		return users, nil
+		return response.OK("success ", user), nil
 	}
 }
 
@@ -104,20 +114,24 @@ func makeUpdateEndpoint(service Service) Controller {
 		req := request.(UpdateReq)
 
 		if req.FirstName != nil && *req.FirstName == "" {
-			return nil, ErrFirstNameRequired
+			return nil, response.BadRequest(ErrFirstNameRequired.Error())
 		}
 		if req.LastName != nil && *req.LastName == "" {
-			return nil, ErrLastNameRequired
+			return nil, response.BadRequest(ErrLastNameRequired.Error())
 		}
 		if req.Age != nil && *req.Age < 18 {
-			return nil, ErrAgeMinor
+			return nil, response.BadRequest(ErrAgeMinor.Error())
 		}
 
 		if err := service.Update(ctx, req.ID, req.FirstName, req.LastName, req.Age); err != nil {
 
-			return nil, err
+			if errors.As(err, &ErrUserNotFound{}) {
+				return nil, response.NotFound(err.Error())
+			}
+
+			return nil, response.InternalServerError(err.Error())
 		}
 
-		return nil, nil
+		return response.OK("success", nil), nil
 	}
 }

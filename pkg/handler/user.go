@@ -10,6 +10,7 @@ import (
 
 	"github.com/michaelrodriguezuy/go_proyect/internal/user"
 	"github.com/michaelrodriguezuy/go_proyect/pkg/transport"
+	"github.com/michaelrodriguezuy/go_proyect2/response"
 )
 
 func NewUserHTTPServer(ctx context.Context, router *http.ServeMux, endpoints user.Endpoints) {
@@ -58,7 +59,7 @@ func UserServer(ctx context.Context, endpoints user.Endpoints) func(w http.Respo
 		case http.MethodPatch:
 			switch pathSize {
 			case 4: //es un update
-				end = endpoints.Update 
+				end = endpoints.Update
 				deco = decodeUpdateUser
 			}
 		}
@@ -124,27 +125,20 @@ func decodeCreateUser(ctx context.Context, r *http.Request) (any, error) {
 
 func encodeResponse(ctx context.Context, w http.ResponseWriter, resp any) error {
 
-	data, err := json.Marshal(resp) //marshall convierte una estructura a un json
+	//agrego el manejo del pkg response
 
-	if err != nil {
-		return err
-	}
-
-	status := http.StatusOK
-
-	w.WriteHeader(status)
+	r := resp.(response.Response) //casteo el dato a un tipo Response
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	fmt.Fprintf(w, `{"status": %d, "data": "%s"}`, status, data)
+	w.WriteHeader(r.StatusCode())
 
-	// if err := json.NewEncoder(w).Encode(data); err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// }
-	return nil
+	return json.NewEncoder(w).Encode(resp) //encodeo el response
 }
 
 func encodeError(_ context.Context, err error, w http.ResponseWriter) {
-	status := http.StatusInternalServerError
-	w.WriteHeader(status)
+
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	fmt.Fprintf(w, `{"status": %d, "data": "%s"}`, status, err.Error())
+	resp := err.(response.Response) //casteo el dato a un tipo Response
+	w.WriteHeader(resp.StatusCode())
+
+	_ = json.NewEncoder(w).Encode(resp) //encodeo el response
 }

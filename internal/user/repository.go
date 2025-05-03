@@ -69,7 +69,7 @@ func (r *repo) GetByID(ctx context.Context, id uint64) (*domain.User, error) {
 	})
 
 	if index < 0 {
-		return nil, &ErrUserNotFound{id}
+		return nil, ErrUserNotFound{id}
 	}
 
 	return &r.db.Users[index], nil
