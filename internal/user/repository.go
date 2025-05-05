@@ -5,15 +5,15 @@ import (
 
 	"log"
 
-	"slices"
+	"database/sql"
 
 	"github.com/michaelrodriguezuy/go_proyect/internal/domain"
 )
 
-type DB struct {
+/* type DB struct {
 	Users     []domain.User
 	MaxUserID uint64
-}
+} */
 
 // los campos estan en minusculas porque van a ser campos privados
 type (
@@ -26,12 +26,13 @@ type (
 	}
 
 	repo struct {
-		db  DB
+		//db  DB //este es el mock
+		db  *sql.DB
 		log *log.Logger
 	}
 )
 
-func NewRepository(db DB, logger *log.Logger) Repository {
+func NewRepository(db *sql.DB, logger *log.Logger) Repository {
 	return &repo{
 		db:  db,
 		log: logger,
@@ -39,12 +40,16 @@ func NewRepository(db DB, logger *log.Logger) Repository {
 }
 
 func (r *repo) Create(ctx context.Context, user *domain.User) (domain.User, error) {
-	r.log.Println("Create")
+	r.log.Println("Create repository")
 	// Simulate a delay
 	//time.Sleep(2 * time.Second)
+
+	/* // Simulate a database insert
 	user.ID = uint64(r.db.MaxUserID + 1)
 	r.db.Users = append(r.db.Users, *user)
 	r.db.MaxUserID++
+	*/
+
 	r.log.Printf("User created: %+v\n", user)
 	return *user, nil
 }
@@ -52,7 +57,8 @@ func (r *repo) GetAll(ctx context.Context) ([]domain.User, error) {
 	r.log.Println("GetAll")
 	// Simulate a delay
 	// time.Sleep(2 * time.Second)
-	return r.db.Users, nil
+	//return r.db.Users, nil
+	return nil, nil
 }
 
 func (r *repo) GetByID(ctx context.Context, id uint64) (*domain.User, error) {
@@ -64,15 +70,20 @@ func (r *repo) GetByID(ctx context.Context, id uint64) (*domain.User, error) {
 	//sino encuentra el elemento, devuelve -1
 
 	//de esta forma acceso a un campo dentro de una estructura
-	index := slices.IndexFunc(r.db.Users, func(user domain.User) bool {
-		return user.ID == id
-	})
 
-	if index < 0 {
-		return nil, ErrUserNotFound{id}
-	}
+	/*
+		index := slices.IndexFunc(r.db.Users, func(user domain.User) bool {
+			return user.ID == id
+		})
 
-	return &r.db.Users[index], nil
+		if index < 0 {
+			return nil, ErrUserNotFound{id}
+		}
+
+		return &r.db.Users[index], nil
+	*/
+
+	return nil, nil
 
 }
 
@@ -80,20 +91,22 @@ func (r *repo) Update(ctx context.Context, id uint64, firstName, lastName *strin
 	r.log.Println("Update")
 
 	//como el get trabaja con punteros, no es necesario hacer un cast, los cambios se hacen directamente en memoria
-	user, err := r.GetByID(ctx, id)
-	if err != nil {
-		return err
-	}
+	/*
+		user, err := r.GetByID(ctx, id)
+		if err != nil {
+			return err
+		}
 
-	if firstName != nil {
-		user.FirstName = *firstName
-	}
-	if lastName != nil {
-		user.LastName = *lastName
-	}
-	if age != nil {
-		user.Age = *age
-	}
+		if firstName != nil {
+			user.FirstName = *firstName
+		}
+		if lastName != nil {
+			user.LastName = *lastName
+		}
+		if age != nil {
+			user.Age = *age
+		}
+	*/
 
 	return nil
 

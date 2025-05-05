@@ -14,7 +14,12 @@ import (
 func main() {
 	server := http.NewServeMux()
 
-	db := bootstrap.NewDB()
+	db, err := bootstrap.NewDBConnection()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
 	logger := bootstrap.NewLogger()
 
 	//simulo el pasaje por las distintas capas
