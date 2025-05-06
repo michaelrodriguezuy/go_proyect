@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	
 
 	"github.com/michaelrodriguezuy/go_proyect2/response"
 )
@@ -57,24 +57,20 @@ func makeCreateEndpoint(service Service) Controller {
 		req := request.(CreateReq) //convierte el dato a un tipo User CASTEO
 
 		if req.FirstName == "" {
-
 			return nil, response.BadRequest(ErrFirstNameRequired.Error())
 		}
 		if req.LastName == "" {
-
 			return nil, response.BadRequest(ErrLastNameRequired.Error())
 		}
 		if req.Age < 18 {
-
 			return nil, response.BadRequest(ErrAgeMinor.Error())
 		}
 
-		user, err := service.Create(ctx, req.FirstName, req.LastName, req.Age)
-		if err != nil {
+		if err := service.Create(ctx, req.FirstName, req.LastName, req.Age); err != nil {
 			return nil, response.InternalServerError(err.Error())
 		}
-		log.Println("Usuario creado:", user)
-		return response.Created("success ", user), nil
+		
+		return response.Created("success", nil), nil
 	}
 }
 func makeGetAllEndpoint(service Service) Controller {

@@ -7,7 +7,7 @@ CREATE DATABASE IF NOT EXISTS `go_users`;
 
 CREATE TABLE IF NOT EXISTS `go_users`.`users` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(45) NULL,
-  `lastname` VARCHAR(45) NULL,
-  `age` INT NULL,  
+  `first_name` VARCHAR(45) NOT NULL,
+  `last_name` VARCHAR(45) NOT NULL,
+  `age` INT NOT NULL,  
   PRIMARY KEY (`id`))

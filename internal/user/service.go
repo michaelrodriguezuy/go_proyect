@@ -9,7 +9,7 @@ import (
 
 type (
 	Service interface {
-		Create(ctx context.Context, firstName, lastName string, age uint8) (*domain.User, error)
+		Create(ctx context.Context, firstName, lastName string, age uint8) error
 		GetAll(ctx context.Context) ([]domain.User, error)
 		GetByID(ctx context.Context, id uint64) (*domain.User, error)
 		Update(ctx context.Context, id uint64, firstName, lastName *string, age *uint8) error
@@ -28,19 +28,21 @@ func NewService(logger *log.Logger, repo Repository) Service {
 	}
 }
 
-func (s *service) Create(ctx context.Context, firstName, lastName string, age uint8) (*domain.User, error) {
+func (s *service) Create(ctx context.Context, firstName, lastName string, age uint8) error {
 	s.log.Println("Create")
 	user := &domain.User{
 		FirstName: firstName,
 		LastName:  lastName,
 		Age:       age,
 	}
-	savedUser, err := s.repo.Create(ctx, user)
-	if err != nil {
-		return nil, err
+	
+	if err := s.repo.Create(ctx, user); err != nil {
+		s.log.Println("Error creating user:", err)
+		return err
 	}
-	return &savedUser, nil
+	return nil
 }
+
 func (s *service) GetAll(ctx context.Context) ([]domain.User, error) {
 	s.log.Println("GetAll")
 	users, err := s.repo.GetAll(ctx)

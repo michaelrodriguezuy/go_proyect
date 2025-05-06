@@ -18,14 +18,18 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	
 	defer db.Close()
-
+	if condition := db.Ping(); condition != nil {
+		log.Fatal(condition)
+	}
+	
 	logger := bootstrap.NewLogger()
-
 	//simulo el pasaje por las distintas capas
-
 	repo := user.NewRepository(db, logger)
 	service := user.NewService(logger, repo)
+
 	ctx := context.Background() //opcional, por si tenemos que pasar informacion a las diferentes capas
 
 	handler.NewUserHTTPServer(ctx, server, user.NewEndpoint(ctx, service))
