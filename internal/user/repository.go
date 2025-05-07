@@ -118,7 +118,22 @@ func (r *repo) GetByID(ctx context.Context, id uint64) (*domain.User, error) {
 		return &r.db.Users[index], nil
 	*/
 
-	return nil, nil
+	sqlQ := `SELECT id, first_name, last_name, age FROM users WHERE id = ?`
+	var user domain.User
+
+	//de ese ID escaneame estos datos
+	err := r.db.QueryRow(sqlQ, id).Scan(&user.ID, &user.FirstName, &user.LastName, &user.Age)
+	if err != nil {
+		if err == sql.ErrNoRows {
+
+			return nil, ErrUserNotFound{id}
+		}
+		r.log.Println("Error querying user:", err.Error())
+		return nil, err
+	}
+	r.log.Println("User found with ID : ", id)
+
+	return &user, nil
 
 }
 
