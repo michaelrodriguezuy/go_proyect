@@ -7,6 +7,7 @@ import (
 
 var ErrFirstNameRequired = errors.New("first name is required")
 var ErrLastNameRequired = errors.New("last name is required")
+var ErrNoFieldsToUpdate = errors.New("no fields to update")
 
 var ErrAgeMinor = errors.New("user is not an adult")
 

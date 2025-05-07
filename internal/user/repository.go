@@ -2,6 +2,8 @@ package user
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"log"
 
@@ -157,6 +159,49 @@ func (r *repo) Update(ctx context.Context, id uint64, firstName, lastName *strin
 			user.Age = *age
 		}
 	*/
+
+	var fields []string
+	var values []any
+
+	if firstName != nil {
+		fields = append(fields, "first_name = ?")
+		values = append(values, *firstName)
+	}
+	if lastName != nil {
+		fields = append(fields, "last_name = ?")
+		values = append(values, *lastName)
+	}
+	if age != nil {
+		fields = append(fields, "age = ?")
+		values = append(values, *age)
+	}
+
+	if len(fields) == 0 {
+		r.log.Println(ErrNoFieldsToUpdate.Error())
+		return ErrNoFieldsToUpdate
+	}
+
+	//de esta forma le digo que el id es el ultimo elemento de la consulta, y lo agrego al slice
+	values = append(values, id)
+
+	sqlQ := fmt.Sprintf(`UPDATE users SET %s WHERE id = ?`, strings.Join(fields, ", "))
+	resp, err := r.db.Exec(sqlQ, values...)
+	
+	if err != nil {
+		r.log.Println("Error updating user:", err.Error())
+		return err
+	}
+
+	row, err := resp.RowsAffected()
+	if err != nil {
+		r.log.Println("Error getting rows affected:", err.Error())
+		return err
+	}
+	if row == 0 {
+		r.log.Println(ErrUserNotFound{id}.Error())
+		return ErrUserNotFound{id}
+	}
+	r.log.Println("User updated with ID: ", id)
 
 	return nil
 
