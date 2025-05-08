@@ -15,7 +15,10 @@ func NewLogger() *log.Logger {
 }
 
 func NewDBConnection() (*sql.DB, error) {
-	db, err := sql.Open("mysql", "root:root@tcp(localhost:3307)/go_users")
+
+	dbURL := os.ExpandEnv("$DATABASE_USER:$DATABASE_PASSWORD@tcp($DATABASE_HOST:$DATABASE_PORT)/$DATABASE_NAME")
+
+	db, err := sql.Open("mysql", dbURL)
 
 	if err != nil {
 		return nil, err
