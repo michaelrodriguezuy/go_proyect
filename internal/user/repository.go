@@ -186,7 +186,7 @@ func (r *repo) Update(ctx context.Context, id uint64, firstName, lastName *strin
 
 	sqlQ := fmt.Sprintf(`UPDATE users SET %s WHERE id = ?`, strings.Join(fields, ", "))
 	resp, err := r.db.Exec(sqlQ, values...)
-	
+
 	if err != nil {
 		r.log.Println("Error updating user:", err.Error())
 		return err

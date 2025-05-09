@@ -15,9 +15,7 @@ import (
 
 func main() {
 
-	_=godotenv.Load() //carga las variables de entorno del archivo .env
-
-	server := http.NewServeMux()
+	_ = godotenv.Load() //carga las variables de entorno del archivo .env
 
 	db, err := bootstrap.NewDBConnection()
 	if err != nil {
@@ -36,9 +34,30 @@ func main() {
 
 	ctx := context.Background() //opcional, por si tenemos que pasar informacion a las diferentes capas
 
-	handler.NewUserHTTPServer(ctx, server, user.NewEndpoint(ctx, service))
+	h := handler.NewUserHTTPServer(user.NewEndpoint(ctx, service))
 
 	port := os.Getenv("PORT")
 	fmt.Println("Server is running on port ", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s",port), server))
+
+	address := fmt.Sprintf("127.0.0.1:%s", port)
+
+	srv := &http.Server{
+		Handler: accessControl(h),
+		Addr:    address,
+	}
+
+	log.Fatal(srv.ListenAndServe())
+}
+
+func accessControl(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")                                                                                                                            // Permitir cualquier origen
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS")                                                                                      // Permitir métodos
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Authorization, Cache-Control, DNT, If-Modified-Since, Keep-Alive, Origin, User-Agent,X-Requested-With") // Permitir encabezados
+
+		if r.Method == "OPTIONS" {
+			return
+		}
+		h.ServeHTTP(w, r)
+	})
 }

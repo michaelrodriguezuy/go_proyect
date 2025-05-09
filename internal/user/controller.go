@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	
 
 	"github.com/michaelrodriguezuy/go_proyect2/response"
 )
@@ -69,7 +68,7 @@ func makeCreateEndpoint(service Service) Controller {
 		if err := service.Create(ctx, req.FirstName, req.LastName, req.Age); err != nil {
 			return nil, response.InternalServerError(err.Error())
 		}
-		
+
 		return response.Created("success", nil), nil
 	}
 }

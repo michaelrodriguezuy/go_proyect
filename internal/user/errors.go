@@ -14,6 +14,7 @@ var ErrAgeMinor = errors.New("user is not an adult")
 type ErrUserNotFound struct {
 	ID uint64
 }
+
 func (e ErrUserNotFound) Error() string {
 	return fmt.Sprintf("user with ID %d not found", e.ID)
 }

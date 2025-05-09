@@ -35,7 +35,7 @@ func (s *service) Create(ctx context.Context, firstName, lastName string, age ui
 		LastName:  lastName,
 		Age:       age,
 	}
-	
+
 	if err := s.repo.Create(ctx, user); err != nil {
 		s.log.Println("Error creating user:", err)
 		return err
